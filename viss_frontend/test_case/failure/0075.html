@@ -1,0 +1,125 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<title>
+    [0075: Failed to history read a vss datapoint due to invalid authorization token]
+</title>
+<link rel="help" href="https://www.w3.org/TR/vehicle-information-service/#idl-def-getrequest">
+<link rel="stylesheet" type="text/css" href="/css/style-general.css">
+
+<script src="/js/testharness.js"></script>
+<script src="/js/testharnessreport.js"></script>
+<script src="/js/vehicle-test-config.js"></script>
+<script src="/js/vehicle-test-helper.js"></script>
+
+<div id="test-title">
+    [0075: Failed to history read a vss datapoint due to invalid authorization token]
+</div>
+<br>
+<div id="test-assertion">
+    <b>Test assertion:</b><br>
+    When the client makes getRequest to the authorization-needed server with filter containing "history" type and correct value, and invalid authorization token,<br>
+    [401 Token Invalid] error returned.<br>
+</div>
+<div id="scenario">
+    <br>
+    <b>Test Scenario:</b><br>
+    1. Send getRequest specifying an action, data path, requestId and invalid JWT.<br>
+    2. Confirm [401 Token Invalid] error response.<br>
+    <br>
+    <b>Expected Result:</b><br>
+    - Received [401 Token Invalid] error response.<br>
+</div>
+
+<div id="result"></div>
+<br>
+<div id="log"></div>
+
+<script>
+
+    function getResponseHeaderMap(xhr) {
+        const headers = {};
+        xhr.getAllResponseHeaders()
+            .trim()
+            .split(/[\r\n]+/)
+            .map(value => value.split(/: /))
+            .forEach(keyValue => {
+                headers[keyValue[0].trim()] = keyValue[1].trim();
+            });
+        return headers;
+    }
+
+    function getAccessToken() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var response_data = JSON.parse(this.response);
+                access_token = response_data['access']
+                var header = getResponseHeaderMap(this)
+                console.log(this)
+                console.log(header)
+
+            }
+        };
+        // REST API 
+        let request = "POST"
+        let url = VISS_URL_TOKEN
+        let data = new FormData();
+        data.append('username', VISS_USERNAME);
+        data.append('password', VISS_PASSWORD);
+        xhttp.open(request, url, false);
+        xhttp.send(data);
+    }
+
+    function executeRestAPIWithAccessToken(access_token) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var response_data = JSON.parse(this.response);
+                var header = getResponseHeaderMap(this)
+                var status_msg = "HTTP/1.1 " + this.status + " " + this.statusText
+                var success = true
+                console.log(this.getAllResponseHeaders())
+                t.step_func(function () {
+                    success = isGetSuccessResponseForHTTPS(response_data.data)
+                    if (success) {
+                        //assert_true(true, "Get response received. value = " + response_data.data.dp.value);
+                        helper_terminate_success_for_https("Get response received. ", status_msg, header, response_data);
+                    } else {
+                        helper_terminate_failure("Get method failed");
+                    }
+                })();
+            } else if (this.readyState == 4) {
+                var response_data = JSON.parse(this.response)
+                var header = getResponseHeaderMap(this)
+                var status_msg = "HTTP/1.1 " + this.status + " " + this.statusText
+                helper_terminate_failure_for_https("Get method failed ", status_msg, header, response_data);
+            }
+        };
+        // REST API 
+        let request = "GET"
+        let host = VISS_HOST + ":" + VISS_PORT
+        let path = "Vehicle/Speeds"
+        let url = VISS_URL + "/" + path
+        let header = {}
+        header['Authorization'] = 'Bearer ' + access_token+1
+        let params = 'filter={"type":"history", "value":"P2DT12H"}';
+        if (params.length > 0) {
+            console.log(params.length)
+            url = url + "?" + params
+            path = path + "?" + params
+        }
+        addLogRequestMessageForHTTPS(request + " /" + path + " HTTP/1.1", host, header)
+        xhttp.open(request, url, true);
+        for (let key in header) {
+            xhttp.setRequestHeader(key, header[key]);
+        }
+        xhttp.send();
+    }
+    var t = async_test("Get success case");
+    let access_token = ''
+    getAccessToken()
+    executeRestAPIWithAccessToken(access_token)
+
+</script>
+
+</html>

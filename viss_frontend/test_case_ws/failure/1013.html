@@ -1,0 +1,138 @@
+<!DOCTYPE HTML>
+<html>
+<link rel="shortcut icon" href="#">
+<meta charset="utf-8">
+<title>
+    [1013: Attempt too many authorization in short period of time] 
+</title>
+<link rel="help" href="https://www.w3.org/TR/vehicle-information-service/#idl-def-getrequest">
+<link rel="stylesheet" type="text/css" href="/css/style-general.css">
+
+<script src="/js/testharness.js"></script>
+<script src="/js/testharnessreport.js"></script>
+<script src="/js/vehicle-test-config.js"></script>
+<script src="/js/vehicle-test-helper.js"></script>
+
+<div id="test-title">
+    [1013: Attempt too many authorization in short period of time] 
+</div>
+<br>
+<div id="test-assertion">
+    <b>Test assertion:</b><br>
+    When the client makes many request in short period of time (more than 10 requests in a minute),<br>
+    [429 Too Many Request] error returned.<br>
+</div>
+<div id="scenario">
+    <br>
+    <b>Test Scenario:</b><br>
+    1. Open a websocket connection.<br>
+    2. Send getRequest specifying an action, data path, requestId and JWT every second.<br>
+    3. Confirm [401 Unauthorized] error response.<br>
+    4. Send another getRequest until server response with [429 Too Many Request] error.<br>
+    5. Confirm [429 Too Many Request] error response.<br>
+    <br>
+    <b>Expected Result:</b><br>
+    - Receive [429 Too Many Request] error response.<br>
+</div>
+<div id="request"></div>
+
+<div id="result"></div>
+<br>
+<script>
+    // var t = async_test("Get success case");
+    var vehicle = new WebSocket(VISS_URL_SECURE_WS);
+    //3001 : secured
+    let access_token = ""
+    var request_json = ""
+
+    var Or_msg = []
+
+    function showRES_success(Or_msg) {
+        var msg = document.getElementById('result').innerHTML;
+        var tmp = JSON.stringify(Or_msg)
+        var result = tmp.substr(1, tmp.length - 2)
+
+        msg = "<br>"
+            + '<div style="font-size:20px; background-color:#00CC00;">'
+            + "SUCCESS : " + result
+            + '</div>';
+        document.getElementById('result').innerHTML = msg;
+    }
+
+
+    function getResponseHeaderMap(xhr) {
+        const headers = {};
+        xhr.getAllResponseHeaders()
+            .trim()
+            .split(/[\r\n]+/)
+            .map(value => value.split(/: /))
+            .forEach(keyValue => {
+                headers[keyValue[0].trim()] = keyValue[1].trim();
+            });
+        return headers;
+    }
+
+
+    function getAccessToken() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var response_data = JSON.parse(this.response);
+                access_token = response_data['access']
+                var header = getResponseHeaderMap(this)
+            }
+        };
+        // REST API 
+        let request = "POST"
+        let url = VISS_URL_TOKEN
+        let data = new FormData();
+        data.append('username', VISS_USERNAME);
+        data.append('password', VISS_PASSWORD);
+        xhttp.open(request, url, false);
+        xhttp.send(data);
+    }
+
+    function showRES_failure(Or_msg) {
+        var msg = document.getElementById('result').innerHTML;
+        msg = "<br>"
+            + '<div style="font-size:20px; background-color:#FF0000;">'
+            + "FAILURE : " + JSON.stringify(Or_msg)
+            + '</div>';
+        document.getElementById('result').innerHTML = msg;
+    }
+
+    function showREQ(Or_msg) {
+        var rq_msg = document.getElementById('request').innerHTML;
+        rq_msg = "<br>"
+            + '<div style="font-size:20px; background-color:#E56D29;">'
+            + "REQUEST : " + request_json
+            + '</div>';
+        document.getElementById('request').innerHTML = rq_msg;
+    }
+
+    vehicle.onopen = function () {
+        vehicle.onmessage = function (event) {
+            var tmp = JSON.parse(event.data);
+            Or_msg.push(tmp)
+            if ((event.data).includes("error")) {
+                if((event.data).includes("too_many_requests")){
+                    clearInterval(interVal)
+                }
+                showRES_failure(Or_msg)
+            } else {
+                showRES_success(Or_msg)
+            }
+        }
+
+        // getAccessToken()
+        request_json = '{"action":"get","path":"Vehicle/Speed" ,"authorization":"invalid_token","requestId":"5688"}';
+        var interVal = setInterval(() => {
+            vehicle.send(request_json);
+        }, 100);
+        showREQ(request_json)
+    }
+
+
+</script>
+
+</html>

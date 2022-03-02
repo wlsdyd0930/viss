@@ -1,0 +1,183 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<title>
+    [0013: Attempt too many authorization in short period of time]
+</title>
+
+<link rel="help" href="https://www.w3.org/TR/vehicle-information-service/#idl-def-getrequest">
+<link rel="stylesheet" type="text/css" href="/css/style-general.css">
+
+<script src="/js/testharness.js"></script>
+<script src="/js/testharnessreport.js"></script>
+<script src="/js/vehicle-test-config.js"></script>
+<script src="/js/vehicle-test-helper.js"></script>
+
+<div id="test-title">
+    [0013: Attempt too many authorization in short period of time]
+</div>
+<br>
+<div id="test-assertion">
+    <b>Test assertion:</b><br>
+    When the client makes many request in short period of time (more than 10 requests in a minute),<br>
+    [429 Too Many Request] error returned.<br>
+</div>
+<div id="scenario">
+    <br>
+    <b>Test Scenario:</b><br>
+    1. Send getRequest specifying an action, data path, requestId and JWT every second.<br>
+    2. Confirm [401 Unauthorized] error response.<br>
+    3. Send another getRequest until server response with [429 Too Many Request] error.<br>
+    4. Confirm [429 Too Many Request] error response.<br>
+    <br>
+    <b>Expected Result:</b><br>
+    - Receive [429 Too Many Request] error response.<br>
+</div>
+<div id="request"></div>
+<div id="result"></div>
+<br>
+<div id="log"></div>
+
+<script>
+
+    var Or_msg = []
+
+    function showRES_success(status_msg, header, Or_msg) {
+
+        var msg = document.getElementById('result').innerHTML;
+        if (status_msg == "") {
+            msg = ""
+        } else {
+            var tmp = JSON.stringify(Or_msg)
+            var result = tmp.substr(1, tmp.length - 2)
+
+
+            msg = '<br><div style="font-size:20px; background-color:#00CC00;">'
+                + "SUCCESS : Get response received."
+
+
+            msg = msg
+                + "<br></br>"
+                + "Response : <br>"
+                + status_msg + "<br>";
+
+            for (var key in header) {
+                //console.log(key + ": " + _header[key])
+                msg = msg
+                    + key + ": " + header[key] + "<br>"
+            }
+
+            msg = msg
+                + result
+                + '</div>'
+                + '<div style="font-size:20px; background-color:#00CC00;">';
+            document.getElementById('result').innerHTML = msg;
+        }
+    }
+
+    function showRES_failure(Or_msg) {
+        var msg = document.getElementById('result').innerHTML;
+        msg = "<br>"
+            + '<div style="font-size:20px; background-color:#FF0000;">'
+            + "FAILURE : " + JSON.stringify(Or_msg)
+            + '</div>';
+        document.getElementById('result').innerHTML = msg;
+    }
+
+    function showREQ(Or_msg, host) {
+        var rq_msg = document.getElementById('request').innerHTML;
+        rq_msg = "<br>"
+            + '<div style="font-size:20px; background-color:#E56D29;">'
+            + "REQUEST : " + "<br></br>" + Or_msg
+            + "<br>" + "HOST: " + host
+            + '</div>';
+        document.getElementById('request').innerHTML = rq_msg;
+    }
+
+    function getResponseHeaderMap(xhr) {
+        const headers = {};
+        xhr.getAllResponseHeaders()
+            .trim()
+            .split(/[\r\n]+/)
+            .map(value => value.split(/: /))
+            .forEach(keyValue => {
+                headers[keyValue[0].trim()] = keyValue[1].trim();
+            });
+        return headers;
+    }
+
+    function getAccessToken() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var response_data = JSON.parse(this.response);
+                access_token = response_data['access']
+                var header = getResponseHeaderMap(this)
+            }
+        };
+        // REST API 
+        let request = "POST"
+        let url = VISS_URL_TOKEN
+        let data = new FormData();
+        data.append('username', VISS_USERNAME);
+        data.append('password', VISS_PASSWORD);
+        xhttp.open(request, url, false);
+        xhttp.send(data);
+    }
+
+    function executeRestAPIWithAccessToken(access_token) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var header = getResponseHeaderMap(this)
+                var status_msg = "HTTP/1.1 " + this.status + " " + this.statusText
+                var success = true
+                var tmp = JSON.parse(this.response);
+                Or_msg.push(tmp)
+                showRES_success(status_msg, header, Or_msg)
+            } else if (this.readyState == 4) {
+                clearInterval(interVal)
+                var response_data = JSON.parse(this.response)
+                var header = getResponseHeaderMap(this)
+                var status_msg = "HTTP/1.1 " + this.status + " " + this.statusText
+                helper_terminate_failure_for_https("Get method failed ", status_msg, header, response_data);
+            }
+        };
+        // REST API 
+        let request = "GET"
+        let host = VISS_HOST + ":" + VISS_PORT
+        let path = "Vehicle/AverageSpeed"
+        let url = VISS_URL + "/" + path
+        let header = {}
+        header['Authorization'] = 'Bearer ' + access_token
+        let params = ''
+        if (params.length > 0) {
+            url = url + "?" + params
+            path = path + "?" + params
+        }
+        // addLogRequestMessageForHTTPS(request + " /" + path + " HTTP/1.1", host, header)
+        var req = request + " /" + path + " HTTP/1.1 "
+        showREQ(req, host)
+        xhttp.open(request, url, true);
+        for (let key in header) {
+            xhttp.setRequestHeader(key, header[key]);
+        }
+        xhttp.send();
+    }
+
+
+    var t = async_test("Get success case");
+
+    let access_token = ''
+    // getAccessToken()
+    // executeRestAPIWithAccessToken(access_token)
+    var count = 0
+
+    var interVal = setInterval(() => {
+        count++
+        getAccessToken()
+        executeRestAPIWithAccessToken(access_token)
+    }, 500)
+
+</script>
+
+</html>

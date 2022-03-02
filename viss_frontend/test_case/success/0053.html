@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<title>
+    [0053: Search read multiple vss branches with a single path using wildcard]
+</title>
+<link rel="help" href="https://www.w3.org/TR/vehicle-information-service/#idl-def-getrequest">
+<link rel="stylesheet" type="text/css" href="/css/style-general.css">
+
+<script src="/js/testharness.js"></script>
+<script src="/js/testharnessreport.js"></script>
+<script src="/js/vehicle-test-config.js"></script>
+<script src="/js/vehicle-test-helper.js"></script>
+
+<div id="test-title">
+    [0053: Search read multiple vss branches with a single path using wildcard]
+</div>
+<br>
+<div id="test-assertion">
+    <b>Test assertion:</b><br>
+    When the client makes getRequest to the server with filter containing "paths" type and correct value,<br>
+    a JSON data object that contain timestamp and multiple vss data will return as response.<br>
+    In this case, value is single vss path pointing vss branch with wildcard.
+</div>
+<div id="scenario">
+    <br>
+    <b>Test Scenario:</b><br>
+    1. Send getRequest specifying an action, data path, requestId and filter.<br>
+    2. Confirm response containing the specified action, requestId, data from correct path that satisfy the given filter.<br>
+    <br>
+    <b>Expected Result:</b><br>
+    - Received 'getSuccessResponse' containing specified requestId.
+</div>
+
+<div id="result"></div>
+<br>
+<div id="log"></div>
+
+<script>
+
+    function getResponseHeaderMap(xhr) {
+        const headers = {};
+        xhr.getAllResponseHeaders()
+            .trim()
+            .split(/[\r\n]+/)
+            .map(value => value.split(/: /))
+            .forEach(keyValue => {
+                headers[keyValue[0].trim()] = keyValue[1].trim();
+            });
+        return headers;
+    }
+
+    function executeRestAPI() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var response_data = JSON.parse(this.response);
+                var header = getResponseHeaderMap(this)
+                var status_msg = "HTTP/1.1 " + this.status + " " + this.statusText
+                var success = true
+                t.step_func(function () {
+                    for (var temp_response_data of response_data.data) {
+                        if (isGetSuccessResponseForHTTPS(temp_response_data) === false) {
+                            success = false
+                        }
+                    }
+                    if (success) {
+                        helper_terminate_success_for_https("Get response received. ", status_msg, header, response_data);
+                    } else {
+                        helper_terminate_failure("Get method failed");
+                    }
+                })();
+            } else if (this.readyState == 4) {
+                var response_data = JSON.parse(this.response)
+                var header = getResponseHeaderMap(this)
+                var status_msg = "HTTP/1.1 " + this.status + " " + this.statusText
+                helper_terminate_failure_for_https("Get method failed ", status_msg, header, response_data);
+            }
+        };
+        // REST API 
+        let request = "GET"
+        let host = VISS_HOST + ":" + VISS_PORT
+        let path = "Vehicle/Cabin/Door"
+        let url = VISS_URL + "/" + path
+        let header = {}
+        let params = 'filter={"type":"paths", "value":"*/Left"}';
+
+        if (params.length > 0) {
+            console.log(params.length)
+            url = url + "?" + params
+            path = path + "?" + params
+        }
+        addLogRequestMessageForHTTPS(request + " /" + path + " HTTP/1.1", host, header)
+        xhttp.open(request, url, true);
+        xhttp.send();
+    }
+
+    var t = async_test("Get success case");
+
+    executeRestAPI()
+
+</script>
+
+</html>

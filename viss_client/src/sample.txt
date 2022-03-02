@@ -1,0 +1,99 @@
+// search O
+{
+    "action": "get",
+    "path": "Vehicle",
+    "filter": {"op-type":"paths", "op-value":["Cabin/Door/*/*/IsOpen", "IsMoving"]},
+    "requestId": "5688"
+}
+
+// unsub O
+{
+    "action": "unsubscribe",
+    "subscriptionId": "76ab3308-d9b5-4bc5-ade8-2c114ab478e6",
+    "requestId": "6578"
+}
+
+//sub O
+{
+    "action": "subscribe",
+    "path": "Vehicle/Cabin/Door/*/*/IsOpen",
+    "filter": {"op-type":"capture", "op-value":"time-based", "op-extra":{"period":"6"}},
+    "requestId": "6578"
+} 
+
+
+//sub single path O
+{
+    "action": "subscribe",
+    "path": "Vehicle/IsMoving",
+    "filter": {"op-type":"capture", "op-value":"time-based", "op-extra":{"period":"6"}},
+    "requestId": "6578"
+}
+
+//sub single path number O
+{
+    "action": "subscribe",
+    "path": "Vehicle/OBD/FuelLevel",
+    "filter": {"op-type":"capture", "op-value":"time-based", "op-extra":{"period":"6"}},
+    "requestId": "6578"
+}
+
+//sub range single path number O
+// ["eq", "ne", "gt", "gte", "lt", "lte"],
+{
+    "action": "subscribe",
+    "path": "Vehicle/OBD/FuelLevel",
+    "filter": {"op-type":"capture", "op-value":"range", "op-extra":{"logic-op":"gt", "boundary": "0.1"}},
+    "requestId": "6578"
+}
+
+//sub change O
+// ["eq", "ne", "gt", "gte", "lt", "lte"],
+{
+    "action": "subscribe",
+    "path": "Vehicle/OBD/FuelLevel",
+    "filter": {"op-type":"capture", "op-value":"change", "op-extra":{"logic-op":"gt", "diff": "0.3"}},
+    "requestId": "6578"
+}
+
+//sub change wrong path case 1: no such thing X
+{
+    "action": "subscribe",
+    "path": "Vehicle/OBD/FuelLevel/1",
+    "filter": {"op-type":"capture", "op-value":"change", "op-extra":{"logic-op":"lt", "diff": "0.3"}},
+    "requestId": "6578"
+}
+
+
+//sub change wrong path case 2: cannot compare O
+{
+    "action": "subscribe",
+    "path": "Vehicle/IsMoving",
+    "filter": {"op-type":"capture", "op-value":"change", "op-extra":{"logic-op":"lt", "diff": "0.3"}},
+    "requestId": "6578"
+}
+
+//sub change wrong path case 3: cannot compare O
+{
+    "action": "subscribe",
+    "path": "Vehicle/Cabin/Infotainment/HMI/DayNightMode",
+    "filter": {"op-type":"capture", "op-value":"change", "op-extra":{"logic-op":"lt", "diff": "0.3"}},
+    "requestId": "6578"
+}
+
+
+//sub change wrong path case 4: diff not number O
+{
+    "action": "subscribe",
+    "path": "Vehicle/OBD/FuelLevel",
+    "filter": {"op-type":"capture", "op-value":"change", "op-extra":{"logic-op":"lt", "diff": "0ddd"}},
+    "requestId": "6578"
+}
+
+//sub curve-logging: O
+{
+    "action": "subscribe",
+    "path": "Vehicle/OBD/FuelLevel",
+    "filter": {"op-type":"capture", "op-value":"curve-logging", "op-extra":{"max-err":"0.1", "buf-size":"20"}},
+    "requestId": "6578"
+}

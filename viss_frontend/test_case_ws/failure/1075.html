@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html>
+<link rel="shortcut icon" href="#">
+<meta charset="utf-8">
+<title>
+    [1075: Failed to history read a vss datapoint due to invalid authorization token]
+</title>
+<link rel="help" href="https://www.w3.org/TR/vehicle-information-service/#idl-def-getrequest">
+<link rel="stylesheet" type="text/css" href="/css/style-general.css">
+
+<script src="/js/testharness.js"></script>
+<script src="/js/testharnessreport.js"></script>
+<script src="/js/vehicle-test-config.js"></script>
+<script src="/js/vehicle-test-helper.js"></script>
+
+<div id="test-title">
+    [1075: Failed to history read a vss datapoint due to invalid authorization token]
+</div>
+<br>
+<div id="test-assertion">
+    <b>Test assertion:</b><br>
+    When the client makes getRequest to the authorization-needed server with filter containing "history" type and correct value, and invalid authorization token,<br>
+    [401 Token Invalid] error returned.<br>
+</div>
+<div id="scenario">
+    <br>
+    <b>Test Scenario:</b><br>
+    1. Open a websocket connection.<br>
+    2. Send getRequest specifying an action, data path, requestId and invalid JWT.<br>
+    3. Confirm [401 Token Invalid] error response.<br>
+    <br>
+    <b>Expected Result:</b><br>
+    - Received [401 Token Invalid] error response.<br>
+</div>
+<div id="request"></div>
+
+<div id="result"></div>
+<br>
+<script>
+    var t = async_test("Get success case");
+    var vehicle = new WebSocket(VISS_URL_SECURE_WS);
+    //3001 : secured
+    let access_token = ""
+    var request_json = ""
+
+
+    function getResponseHeaderMap(xhr) {
+        const headers = {};
+        xhr.getAllResponseHeaders()
+            .trim()
+            .split(/[\r\n]+/)
+            .map(value => value.split(/: /))
+            .forEach(keyValue => {
+                headers[keyValue[0].trim()] = keyValue[1].trim();
+            });
+        return headers;
+    }
+
+
+    function getAccessToken() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var response_data = JSON.parse(this.response);
+                access_token = response_data['access']
+                var header = getResponseHeaderMap(this)
+            }
+        };
+        // REST API 
+        let request = "POST"
+        let url = VISS_URL_TOKEN
+        let data = new FormData();
+        data.append('username', VISS_USERNAME);
+        data.append('password', VISS_PASSWORD);
+        xhttp.open(request, url, false);
+        xhttp.send(data);
+    }
+
+    function showRES_success(Or_msg) {
+        var msg = document.getElementById('result').innerHTML;
+        msg = "<br>"
+            + '<div style="font-size:20px; background-color:#00CC00;">'
+            + "SUCCESS : " + JSON.stringify(Or_msg)
+            + '</div>';
+        document.getElementById('result').innerHTML = msg;
+    }
+
+    function showRES_failure(Or_msg) {
+        var msg = document.getElementById('result').innerHTML;
+        msg = "<br>"
+            + '<div style="font-size:20px; background-color:#FF0000;">'
+            + "FAILURE : " + JSON.stringify(Or_msg)
+            + '</div>';
+        document.getElementById('result').innerHTML = msg;
+    }
+
+    function showREQ(Or_msg) {
+        var rq_msg = document.getElementById('request').innerHTML;
+        rq_msg = "<br>"
+            + '<div style="font-size:20px; background-color:#E56D29;">'
+            + "REQUEST : " + request_json
+            + '</div>';
+        document.getElementById('request').innerHTML = rq_msg;
+    }
+
+    vehicle.onopen = function () {
+        vehicle.onmessage = function (event) {
+            var success
+            t.step_func(function () {
+                success = isGetSuccessResponse(event.data)
+                if (success) {
+                    helper_terminate_success("Get response received. ", event.data);
+                } else {
+                    helper_terminate_failure("Get method failed", event.data);
+                }
+            })();
+        }
+
+        getAccessToken()
+        request_json ='{"action": "get","path": "Vehicle/Speed","filter": {"type":"history", "value":"P2DT12H"},"authorization":"invalid_token","requestId": "5688"}'
+        vehicle.send(request_json);
+        showREQ(request_json)
+    }
+</script>
+
+</html>

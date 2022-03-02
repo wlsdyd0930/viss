@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+<link rel="shortcut icon" href="#">
+<meta charset="utf-8">
+<title>
+    [1210: Unsubscribe existing subscription]
+</title>
+<link rel="help" href="https://www.w3.org/TR/vehicle-information-service/#idl-def-getrequest">
+<link rel="stylesheet" type="text/css" href="/css/style-general.css">
+
+<script src="/js/vehicle-test-config.js"></script>
+<script src="/js/vehicle-test-helper.js"></script>
+
+<div id="test-title">
+    [1210: Unsubscribe existing subscription]
+</div>
+<br>
+<div id="test-assertion">
+    <b>Test assertion:</b><br>
+    When the client makes unsubscribeRequest to the server,<br>
+    a JSON data object that contain timestamp and subscriptionId will return as response.<br>
+</div>
+<div id="scenario">
+    <br>
+    <b>Test Scenario:</b><br>
+    1. Open a websocket connection.<br>
+    2. Send subscribeRequest<br>
+    3. Confirm response containing subscriptionId.<br>
+    4. Send unsubscribeRequest specifying subscriptionId of previous subscription.<br>
+    5. Confirm response containing the specified action, and subscriptionId.<br>
+    <br>
+    <b>Expected Result:</b><br>
+    - Received 'unsubscribeSuccessResponse' containing specified subscriptionId.
+</div>
+</div>
+<div id="request"></div>
+
+<div id="result"></div>
+<br>
+<script>
+    var subId = ""
+    // var t = async_test("Get success case");
+    var vehicle = new WebSocket(VISS_URL_UNSECURE_WS);
+    //3001 : secured
+    var request_json = ""
+
+    function showRES_success(Or_msg) {
+        var msg = document.getElementById('result').innerHTML;
+        var tmp = JSON.stringify(Or_msg)
+        var result = tmp.substr(1, tmp.length - 2)
+
+        msg = "<br>"
+            + '<div style="font-size:20px; background-color:#00CC00;">'
+            + "SUCCESS : " + result
+            + '</div>';
+        document.getElementById('result').innerHTML = msg;
+    }
+
+    function showRES_failure(Or_msg) {
+        var msg = document.getElementById('result').innerHTML;
+        msg = "<br>"
+            + '<div style="font-size:20px; background-color:#FF0000;">'
+            + "FAILURE : " + JSON.stringify(Or_msg)
+            + '</div>';
+        document.getElementById('result').innerHTML = msg;
+    }
+
+    function showREQ(Or_msg) {
+        var msg = document.getElementById('request').innerHTML;
+        msg = "<br>"
+            + '<div style="font-size:20px; background-color:#E56D29;">'
+            + "REQUEST : " + Or_msg
+            + '</div>';
+        document.getElementById('request').innerHTML = msg;
+    }
+
+    vehicle.onopen = function () {
+        vehicle.onmessage = function (event) {
+            var tmp = JSON.parse(event.data);
+            subId = tmp.subscriptionId
+            if ((event.data).includes("error")) {
+                showRES_failure(Or_msg)
+            } else {
+                if (tmp.action === "subscribe") {
+                    uns_request_json = '{"action": "unsubscribe", "subscriptionId": "' + subId + '", "requestId": "6578"}'
+                    vehicle.send(uns_request_json);
+                    showREQ(uns_request_json)
+                }else if(tmp.action === "unsubscribe"){
+                    showRES_success(tmp)
+                }
+            }
+        }
+        request_json = '{"action": "subscribe","path": "Vehicle/Speed","filter": { "type": "timebased", "value": {"period": "3"} },"requestId": "5688"}'
+        vehicle.send(request_json);
+    }
+</script>
+
+</html>

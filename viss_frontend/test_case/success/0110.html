@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<title>
+    [0110: Update a vss datapoint with a valid request]
+</title>
+<link rel="help" href="https://www.w3.org/TR/vehicle-information-service/#idl-def-getrequest">
+<link rel="stylesheet" type="text/css" href="/css/style-general.css">
+
+<script src="/js/testharness.js"></script>
+<script src="/js/testharnessreport.js"></script>
+<script src="/js/vehicle-test-config.js"></script>
+<script src="/js/vehicle-test-helper.js"></script>
+
+<div id="test-title">
+    [0110: Update a vss datapoint with a valid request]
+</div>
+<br>
+<div id="test-assertion">
+    <b>Test assertion:</b><br>
+    When the client makes setRequest to the server,<br>
+    a JSON data object that contain timestamp will return as response.<br>
+</div>
+<div id="scenario">
+    <br>
+    <b>Test Scenario:</b><br>
+    1. Send setRequest specifying an action, data path and requestId.<br>
+    2. Confirm response containing the specified action, requestId and timestamp.<br>
+    <br>
+    <b>Expected Result:</b><br>
+    - Received 'setSuccessResponse' containing specified requestId.
+</div>
+
+<div id="result"></div>
+<br>
+<div id="log"></div>
+
+<script>
+
+    function getResponseHeaderMap(xhr) {
+        const headers = {};
+        xhr.getAllResponseHeaders()
+            .trim()
+            .split(/[\r\n]+/)
+            .map(value => value.split(/: /))
+            .forEach(keyValue => {
+                headers[keyValue[0].trim()] = keyValue[1].trim();
+            });
+        return headers;
+    }
+
+    function executeRestAPI() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var response_data = JSON.parse(this.response);
+                var header = getResponseHeaderMap(this)
+                var status_msg = "HTTP/1.1 " + this.status + " " + this.statusText
+                var success = true
+                t.step_func(function () {
+                    success = isSetSuccessResponseForHTTPS(response_data)
+                    if (success) {
+                        helper_terminate_success_for_https("Get response received. ", status_msg, header, response_data);
+                    } else {
+                        helper_terminate_failure("Get method failed");
+                    }
+                })();
+            } else if (this.readyState == 4) {
+                var response_data = JSON.parse(this.response)
+                var header = getResponseHeaderMap(this)
+                var status_msg = "HTTP/1.1 " + this.status + " " + this.statusText
+                helper_terminate_failure_for_https("Get method failed ", status_msg, header, response_data);
+            }
+        };
+        // REST API 
+        let request = "POST"
+        let host = VISS_HOST + ":" + VISS_PORT
+        let path = "Vehicle/Powertrain/Transmission/PerformanceMode"
+        let url = VISS_URL + "/" + path
+        let header = {}
+        let params = ''
+        if (params.length > 0) {
+            url = url + "?" + params
+            path = path + "?" + params
+        }
+        let data = new FormData();
+        data.append('value', 'sport');
+        let dict_data = { 'value': 'sport' }
+
+        addLogRequestMessageForHTTPS(request + " /" + path + " HTTP/1.1", host, header, dict_data)
+        xhttp.open(request, url, true);
+        xhttp.send(data);
+    }
+
+
+    var t = async_test("Get success case");
+
+    executeRestAPI()
+
+</script>
+
+</html>

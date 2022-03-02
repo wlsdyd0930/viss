@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<link rel="shortcut icon" href="#">
+<meta charset="utf-8">
+<title>
+    [1150: Subscribe a vss datapoint with change capture filter]
+</title>
+<link rel="help" href="https://www.w3.org/TR/vehicle-information-service/#idl-def-getrequest">
+<link rel="stylesheet" type="text/css" href="/css/style-general.css">
+
+
+<script src="/js/vehicle-test-config.js"></script>
+<script src="/js/vehicle-test-helper.js"></script>
+
+<div id="test-title">
+    [1150: Subscribe a vss datapoint with change capture filter]
+</div>
+<br>
+<div id="test-assertion">
+    <b>Test assertion:</b><br>
+    When the client makes subscribeRequest to the server with change capture filter,<br>
+    a JSON data object that contain subscription information will return as response.<br>
+    After that, "subscription" response contain vss datapoint will return when the given filter condition is satisfied.<br>
+    In this case, wildcard is included in request data path.
+</div>
+<div id="scenario">
+    <br>
+    <b>Test Scenario:</b><br>
+    1. Open a websocket connection.<br>
+    2. Send subscribeRequest specifying an action, data path, requestId and filter.<br>
+    3. Confirm response containing subscriptionId.<br>
+    4. Confirm response containing data when it is changed.<br>
+    <br>
+    <b>Expected Result:</b><br>
+    - Receive 'subscribeSuccessResponse' containing the specified requestId and subscriptionId.<br>
+    - Receive 'subscriptionNotification' when it is changed.
+</div>
+<div id="request"></div>
+
+<div id="result"></div>
+<br>
+<script>
+    // var t = async_test("Get success case");
+    var vehicle = new WebSocket(VISS_URL_UNSECURE_WS);
+    //3001 : secured
+    var request_json = ""
+    var Or_msg = []
+
+    function showRES_success(Or_msg) {
+        var msg = document.getElementById('result').innerHTML;
+        var tmp = JSON.stringify(Or_msg)
+        var result = tmp.substr(1, tmp.length - 2)
+
+        msg = "<br>"
+            + '<div style="font-size:20px; background-color:#00CC00;">'
+            + "SUCCESS : " + result
+            + '</div>';
+        document.getElementById('result').innerHTML = msg;
+    }
+
+    function showRES_failure(Or_msg) {
+        var msg = document.getElementById('result').innerHTML;
+        msg = "<br>"
+            + '<div style="font-size:20px; background-color:#FF0000;">'
+            + "FAILURE : " + JSON.stringify(Or_msg)
+            + '</div>';
+        document.getElementById('result').innerHTML = msg;
+    }
+
+    function showREQ(Or_msg) {
+        var rq_msg = document.getElementById('request').innerHTML;
+        rq_msg = "<br>"
+            + '<div style="font-size:20px; background-color:#E56D29;">'
+            + "REQUEST : " + request_json
+            + '</div>';
+        document.getElementById('request').innerHTML = rq_msg;
+    }
+
+    vehicle.onopen = function () {
+        vehicle.onmessage = function (event) {
+            var tmp = JSON.parse(event.data);
+            Or_msg.push(tmp)
+            if ((event.data).includes("error")) {
+                showRES_failure(Or_msg)
+            } else {
+                showRES_success(Or_msg)
+            }
+        }
+
+        request_json = '{"action": "subscribe","path": "Vehicle/OBD/FuelLevel","filter": { "type": "change", "value": { "logic-op": "gt", "diff": "0.1" } },"requestId": "6578"}'
+        vehicle.send(request_json);
+        showREQ(request_json)
+    }
+</script>
+
+</html>

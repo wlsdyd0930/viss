@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html>
+<link rel="shortcut icon" href="#">
+<meta charset="utf-8">
+<title>
+    [1060: Failed to search read multiple vss datapoints with mulitple values due to one value is incorrect]
+</title>
+<link rel="help" href="https://www.w3.org/TR/vehicle-information-service/#idl-def-getrequest">
+<link rel="stylesheet" type="text/css" href="/css/style-general.css">
+
+<script src="/js/testharness.js"></script>
+<script src="/js/testharnessreport.js"></script>
+<script src="/js/vehicle-test-config.js"></script>
+<script src="/js/vehicle-test-helper.js"></script>
+
+<div id="test-title">
+    [1060: Failed to search read multiple vss datapoints with multiple values due to one value is incorrect]
+</div>
+<br>
+<div id="test-assertion">
+    <b>Test assertion:</b><br>
+    When the client makes getRequest to the server with filter containing "paths" type and incorrect value,<br>
+    [404 Invalid Path] error returned.<br>
+    In this case, a single value inside value list is incorrect.
+</div>
+<div id="scenario">
+    <br>
+    <b>Test Scenario:</b><br>
+    1. Open a websocket connection.<br>
+    2. Send getRequest specifying an action, data path, requestId and incorrect filter.<br>
+    3. Confirm [404 Invalid Path] error response.<br>
+    <br>
+    <b>Expected Result:</b><br>
+    - Received [404 Invalid Path] error response.
+</div>
+<div id="request"></div>
+
+<div id="result"></div>
+
+<script>
+    var t = async_test("Get success case");
+    var vehicle = new WebSocket(VISS_URL_UNSECURE_WS);
+    var request_json = ""
+    //3001 : secured 3002 : unsecured
+
+    function showRES_success(Or_msg) {
+        var msg = document.getElementById('result').innerHTML;
+        msg = "<br>"
+            + '<div style="font-size:20px; background-color:#00CC00;">'
+            + "SUCCESS : " + JSON.stringify(Or_msg)
+            + '</div>';
+        document.getElementById('result').innerHTML = msg;
+    }
+
+    function showRES_failure(Or_msg) {
+        var msg = document.getElementById('result').innerHTML;
+        msg = "<br>"
+            + '<div style="font-size:20px; background-color:#FF0000;">'
+            + "FAILURE : " + JSON.stringify(Or_msg)
+            + '</div>';
+        document.getElementById('result').innerHTML = msg;
+    }
+
+    function showREQ(Or_msg) {
+        var rq_msg = document.getElementById('request').innerHTML;
+        rq_msg = "<br>"
+            + '<div style="font-size:20px; background-color:#E56D29;">'
+            + "REQUEST : " + request_json
+            + '</div>';
+        document.getElementById('request').innerHTML = rq_msg;
+    }
+
+    vehicle.onopen = function () {
+        vehicle.onmessage = function (event) {
+            var success
+            t.step_func(function () {
+                success = isGetSuccessResponse(event.data)
+                if (success) {
+                    helper_terminate_success("Get response received. ", event.data);
+                } else {
+                    helper_terminate_failure("Get method failed", event.data);
+                }
+            })();
+        }
+        // getAccessToken()
+        request_json = '{"action":"get","path":"Vehicle/Cabin/Door","filter":{"type":"paths","value":["*/*/Isnono","*/*/IsOpen"]},"requestId":"5688"}';
+        vehicle.send(request_json);
+        showREQ(request_json)
+    }
+
+</script>
+
+</html>

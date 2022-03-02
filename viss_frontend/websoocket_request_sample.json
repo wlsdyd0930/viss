@@ -1,0 +1,142 @@
+//search
+{
+    "action": "get",
+    "path": "Vehicle",
+    "filter": {"op-type":"paths", "op-value":"IsMoving"},
+    "requestId": "5688"
+}
+
+{
+    "action": "get",
+    "path": "Vehicle",
+    "filter": {"op-type":"paths", "op-value":["Cabin/Door/*/*/IsOpen", "IsMoving"]},
+    "requestId": "5688"
+}
+
+// unsub
+{
+    "action": "unsubscribe",
+    "subscriptionId": "76ab3308-d9b5-4bc5-ade8-2c114ab478e6",
+    "requestId": "6578"
+}
+
+//sub
+{
+    "action": "subscribe",
+    "path": "Vehicle/Cabin/Door/*/*/IsOpen",
+    "filter": {"op-type":"capture", "op-value":"time-based", "op-extra":{"period":"6"}},
+    "requestId": "6578"
+}
+
+{
+    "action": "subscribe",
+    "path": "Vehicle/Powertrain/FuelSystem/Level",
+    "filter": {"op-type":"capture", "op-value":"time-based", "op-extra":{"period":"6"}},
+    "requestId": "6578"
+}
+
+//sub single path
+{
+    "action": "subscribe",
+    "path": "Vehicle/IsMoving",
+    "filter": {"op-type":"capture", "op-value":"time-based", "op-extra":{"period":"6"}},
+    "requestId": "6578"
+}
+
+//sub single path number
+{
+    "action": "subscribe",
+    "path": "Vehicle/Powertrain/FuelSystem/Level",
+    "filter": {"op-type":"capture", "op-value":"time-based", "op-extra":{"period":"6"}},
+    "requestId": "6578"
+}
+
+//sub range single path number
+// ["eq", "ne", "gt", "gte", "lt", "lte"],
+{
+    "action": "subscribe",
+    "path": "Vehicle/Powertrain/FuelSystem/Level",
+    "filter": {"op-type":"capture", "op-value":"range", "op-extra":{"logic-op":"gt", "boundary": "0.1"}},
+    "requestId": "6578"
+}
+
+//sub change
+// ["eq", "ne", "gt", "gte", "lt", "lte"],
+{
+    "action": "subscribe",
+    "path": "Vehicle/Powertrain/FuelSystem/Level",
+    "filter": {"op-type":"capture", "op-value":"change", "op-extra":{"logic-op":"gt", "diff": "0.3"}},
+    "requestId": "6578"
+}
+
+//sub change wrong path case 1: no such thing
+{
+    "action": "subscribe",
+    "path": "Vehicle/Powertrain/FuelSystem/Level/1",
+    "filter": {"op-type":"capture", "op-value":"change", "op-extra":{"logic-op":"lt", "diff": "0.3"}},
+    "requestId": "6578"
+}
+
+
+//sub change wrong path case 2: cannot compare
+{
+    "action": "subscribe",
+    "path": "Vehicle/IsMoving",
+    "filter": {"op-type":"capture", "op-value":"change", "op-extra":{"logic-op":"lt", "diff": "0.3"}},
+    "requestId": "6578"
+}
+
+//sub change wrong path case 3: cannot compare
+{
+    "action": "subscribe",
+    "path": "Vehicle/Cabin/Infotainment/HMI/DayNightMode",
+    "filter": {"op-type":"capture", "op-value":"change", "op-extra":{"logic-op":"lt", "diff": "0.3"}},
+    "requestId": "6578"
+}
+
+
+//sub change wrong path case 4: diff not number
+{
+    "action": "subscribe",
+    "path": "Vehicle/Powertrain/FuelSystem/Level",
+    "filter": {"op-type":"capture", "op-value":"change", "op-extra":{"logic-op":"lt", "diff": "0ddd"}},
+    "requestId": "6578"
+}
+
+//sub curve-logging:
+
+{
+    "action": "subscribe",
+    "path": "Vehicle/Speed",
+    "filter": {"op-type":"capture", "op-value":"curve-logging", "op-extra":{"max-err":"0.1", "buf-size":"20"}},
+    "requestId": "6578"
+}
+
+{
+    "action": "subscribe",
+    "path": "Vehicle/OBD/FuelLevel",
+    "filter": {"op-type":"capture", "op-value":"curve-logging", "op-extra":{"max-err":"0.1", "buf-size":"20"}},
+    "requestId": "6578",
+    "authorization": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjI5NDQ4MjY1LCJqdGkiOiIxODg4YTg2MzZjYjA0NGM0ODI0YWNjYzJlOGJiMTFhMCIsInVzZXJfaWQiOjJ9.r9WMkRKevH6SnsT2eDpjjE6yHnBHUo21HhI40E1XKVE"
+}
+
+{
+    "action": "subscribe",
+    "path": "Vehicle/OBD/FuelLevel",
+    "filter": {"op-type":"capture", "op-value":"range", "op-extra":[{"logic-op":"gt", "boundary":"10"}, {"logic-op":"lt", "boundary":"81"}]},
+    "requestId": "6578"
+}
+
+{
+    "action": "subscribe",
+    "path": "Vehicle/OBD/FuelLevel",
+    "filter": {"op-type":"capture", "op-value":"range", "op-extra":{"logic-op":"gte", "boundary":"0.8"}},
+    "requestId": "6578"
+}
+
+{
+    "action": "subscribe",
+    "path": "Vehicle/OBD/FuelLevel",
+    "filter": {"op-type":"capture", "op-value":"range", "op-extra":[{"logic-op":"gt", "boundary": "0.1"}, {"logic-op":"lte", "boundary": "0.4"}]},
+    "requestId": "6578"
+}
