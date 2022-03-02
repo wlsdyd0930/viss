@@ -1,10 +1,16 @@
 
-1. Run viss_client server
+1. Set up viss_client server
 
 ```
 $ cd viss_client
+$ npm install
+```
+
+2. Run viss_client server
+
+```
 $ npm start
 ```
 
-2. Verify test cases is working
+3. Verify test cases is working
     - ex) 127.0.0.1:3000
