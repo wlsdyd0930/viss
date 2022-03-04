@@ -1,7 +1,8 @@
 # Vehicle Information Service Specification(VISS) Project
 
-URL: https://viss.cloud/
+- URL: https://viss.cloud/
 
+Reference
 - Vehicle Signal Specification(VSS): https://covesa.github.io/vehicle_signal_specification/
 - Vehicle Information Service Specification(VISS): https://www.w3.org/TR/vehicle-information-service/
 - Vehicle Information Service Specification(VISS version 2 - Core): https://www.w3.org/TR/viss2-core/
